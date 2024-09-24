@@ -3,13 +3,14 @@ import dataclasses
 import requests
 from bs4 import BeautifulSoup
 from dataclasses import dataclass
+import re
 
 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:130.0) Gecko/20100101 Firefox/130.0'}
-url = 'https://untappd.com/beer/top_rated?type=bitter-best&country=england'
-req = requests.get(url, headers=headers)
-soup = BeautifulSoup(req.content, 'html.parser')
+#url = 'https://untappd.com/beer/top_rated?type=bitter-best&country=england'
+#req = requests.get(url, headers=headers)
+#soup = BeautifulSoup(req.content, 'html.parser')
 
-print(req.status_code)
+#print(req.status_code)
 
 
 @dataclass
@@ -64,7 +65,13 @@ def get_beers():
         beer_brewery = beer_styles[0].text.strip()
         beer_style = beer_styles[1].text.strip()
         full_desc = beer.find("p", {"class": f"desc-full-{beer_data_bid}"}).text.strip()
-        beer_desc = full_desc.replace(" Read Less", "")
+
+        if "Read Less" in full_desc:
+            beer_desc = full_desc.replace("Read Less", "")
+        elif " Read Less" in full_desc:
+            beer_desc = full_desc.replace(" Read Less", "")
+        else:
+            beer_desc = ""
 
         # beer details
         beer_abv = beer.find("p", {"class": "abv"}).text.strip()
@@ -73,7 +80,7 @@ def get_beers():
 
         # retrieve beer picture
         filename = f"images/{beer_name}.jpeg"
-        get_beer_picture(beer_picture_link, filename)
+        #get_beer_picture(beer_picture_link, filename)
 
         beers.append(Beer
                      (beer_name, beer_style, beer_brewery, beer_abv, beer_ibu,
@@ -81,9 +88,18 @@ def get_beers():
     return beers
 
 
+def get_beer_styles():
+    url = "https://untappd.com/beer/top_rated"
+    req = requests.get(url, headers=headers)
+    print(f"Beer styles status code: {req.status_code}")
+    soup = BeautifulSoup(req.content, 'html.parser')
+    content_box = soup.find("div", {"class", "content"})
+    filters = content_box.find("div", {"class", "filter"})
+    print(filters)
+
+
 def main():
-    beers = get_beers()
-    write_data_file(beers)
+    get_beer_styles()
 
 
 
