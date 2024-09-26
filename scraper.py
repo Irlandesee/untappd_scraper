@@ -41,7 +41,7 @@ def get_beer_picture(beer_picture_link: str, filename: str):
 
 def write_data_file(beers=[]):
     path_to_data_file = "data/data.json"
-    with open(path_to_data_file, "w") as f:
+    with open(path_to_data_file, "a") as f:
         json_obj = json.dumps(beers, cls=EnhancedJSONEncoder)
         f.write(json_obj)
     f.close()
@@ -82,7 +82,7 @@ def get_beers(soup: BeautifulSoup):
             if "/" in beer_name:
                 beer_name = beer_name.replace("/", "")
             filename = f"images/{beer_name}.jpeg"
-            get_beer_picture(beer_picture_link, filename)
+            # get_beer_picture(beer_picture_link, filename)
         else:
             filename = "images/default_beer_picture.jpeg"
 
@@ -100,9 +100,12 @@ def read_beer_urls():
 
 def main():
     urls = read_beer_urls()
+    number_of_urls_left = len(urls)
     random.shuffle(urls)
     for url in urls:
+        number_of_urls_left -= 1
         print(f"Visiting: {url}")
+        print(f"Number of urls left: {number_of_urls_left}")
         r = requests.get(url, headers=headers)
         soup = BeautifulSoup(r.content, 'html.parser')
         beers = get_beers(soup)
