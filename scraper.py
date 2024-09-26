@@ -1,16 +1,13 @@
+from bs4 import BeautifulSoup
+from dataclasses import dataclass
 import json
 import dataclasses
 import requests
-from bs4 import BeautifulSoup
-from dataclasses import dataclass
-import re
+import time
+import random
 
 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:130.0) Gecko/20100101 Firefox/130.0'}
-#url = 'https://untappd.com/beer/top_rated?type=bitter-best&country=england'
-#req = requests.get(url, headers=headers)
-#soup = BeautifulSoup(req.content, 'html.parser')
-
-#print(req.status_code)
+default_beer_picture_link = "https://assets.untappd.com/site/assets/images/temp/badge-beer-default.png"
 
 
 @dataclass
@@ -33,11 +30,11 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 
 
 def get_beer_picture(beer_picture_link: str, filename: str):
-    print(f"Downloading: {beer_picture_link}")
+    #print(f"Downloading: {beer_picture_link}")
     filename = filename.replace(" ", "")
     img_data = requests.get(beer_picture_link).content
     with open(filename, 'wb') as f:
-        print(f"Writing {filename}")
+        #print(f"Writing {filename}")
         f.write(img_data)
     f.close()
 
@@ -50,7 +47,7 @@ def write_data_file(beers=[]):
     f.close()
 
 
-def get_beers():
+def get_beers(soup: BeautifulSoup):
     beer_container = soup.find("div", {"class": "beer-container beer-list pad"})
     beer_items = beer_container.findAll("div", {"class": "beer-item"})
     beers = []
@@ -79,28 +76,40 @@ def get_beers():
         beer_raters = beer.find("p", {"class": "raters"}).text.strip()
 
         # retrieve beer picture
-        filename = f"images/{beer_name}.jpeg"
-        #get_beer_picture(beer_picture_link, filename)
+        if beer_picture_link != default_beer_picture_link:
+            if ":" in beer_name:
+                beer_name = beer_name.replace(":", "")
+            if "/" in beer_name:
+                beer_name = beer_name.replace("/", "")
+            filename = f"images/{beer_name}.jpeg"
+            get_beer_picture(beer_picture_link, filename)
+        else:
+            filename = "images/default_beer_picture.jpeg"
 
-        beers.append(Beer
-                     (beer_name, beer_style, beer_brewery, beer_abv, beer_ibu,
-                      beer_raters, beer_desc, filename))
+        beers.append(
+                Beer(beer_name, beer_style, beer_brewery, beer_abv, beer_ibu, beer_raters, beer_desc, filename))
     return beers
 
 
-def get_beer_styles():
-    url = "https://untappd.com/beer/top_rated"
-    req = requests.get(url, headers=headers)
-    print(f"Beer styles status code: {req.status_code}")
-    soup = BeautifulSoup(req.content, 'html.parser')
-    content_box = soup.find("div", {"class", "content"})
-    filters = content_box.find("div", {"class", "filter"})
-    print(filters)
+def read_beer_urls():
+    with open("urls.json", "r") as f:
+        json_obj = json.load(f)
+    f.close()
+    return json_obj
 
 
 def main():
-    get_beer_styles()
-
+    urls = read_beer_urls()
+    random.shuffle(urls)
+    for url in urls:
+        print(f"Visiting: {url}")
+        r = requests.get(url, headers=headers)
+        soup = BeautifulSoup(r.content, 'html.parser')
+        beers = get_beers(soup)
+        write_data_file(beers)
+        time_to_wait = random.randint(3, 10)
+        print(f"waiting {time_to_wait} seconds...")
+        time.sleep(time_to_wait)
 
 
 main()
