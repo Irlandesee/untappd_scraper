@@ -1,4 +1,4 @@
-#!/Users/mattiamac/Documents/GitHub/untappd_scraper/.venv/bin/python3
+#!/home/irlandesee/Documents/Github/untappd_scraper/.venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
