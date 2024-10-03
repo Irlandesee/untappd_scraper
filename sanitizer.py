@@ -32,9 +32,7 @@ def write_data_file(beers: dict):
             beer_list = beers.get(beer_style)
 
             for i in range(0, len(beer_list)):
-                #beer_id_key = ''.join(random.choice(string.ascii_letters) for i in range(32))
                 beer_json = beers[beer_style][i].toJSON()
-                print(beer_json)
                 f.write(f'"{beers[beer_style][i].beer_name_hex}": ')
                 f.write(beer_json)
 
@@ -79,10 +77,18 @@ with open("data/mybeer-f68c5-default-rtdb-export.json", "r") as f:
     
     for category in json_obj.keys():
         beers = json_obj[category]
-        cat_hex = hashlib.md5(category.encode("utf-8")).hexdigest()
+        category = category.replace(" ", "")
+        category = category.replace("-", "")
+        cat_hex = hashlib.md5(category.casefold().encode("utf-8")).hexdigest()
+        print(f"{category} -> {cat_hex}")
         beer_list = []
         for beer in beers.values():
+            beer_name_to_encode = beer["beer_name"].casefold()
+            beer_name_to_encode = beer_name_to_encode.replace(" ", "")
+            beer_name_to_encode = beer_name_to_encode.replace("-", "")
+
             beer_name_hex = hashlib.md5(beer["beer_name"].casefold().encode("utf-8")).hexdigest()
+            print(f"{beer_name_to_encode} -> {beer_name_hex}")
             b = Beer(beer_name_hex, 
                      cat_hex, 
                      beer["beer_name"],
