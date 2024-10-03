@@ -72,7 +72,7 @@ def write_data_file(beers: dict):
                     f.write(",")
                 else: f.write("\n")
 
-            if y < len(beers.keys()):
+            if y < len(beer_style):
                 f.write("\n},")
             else: f.write("}")
 
