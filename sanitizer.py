@@ -80,7 +80,7 @@ with open("data/mybeer-f68c5-default-rtdb-export.json", "r") as f:
         category = category.replace(" ", "")
         category = category.replace("-", "")
         cat_hex = hashlib.md5(category.casefold().encode("utf-8")).hexdigest()
-        print(f"{category} -> {cat_hex}")
+        #print(f"{category} -> {cat_hex}")
         beer_list = []
         for beer in beers.values():
             beer_name_to_encode = beer["beer_name"].casefold()
@@ -88,7 +88,7 @@ with open("data/mybeer-f68c5-default-rtdb-export.json", "r") as f:
             beer_name_to_encode = beer_name_to_encode.replace("-", "")
 
             beer_name_hex = hashlib.md5(beer["beer_name"].casefold().encode("utf-8")).hexdigest()
-            print(f"{beer_name_to_encode} -> {beer_name_hex}")
+            #print(f"{beer_name_to_encode} -> {beer_name_hex}")
             b = Beer(beer_name_hex, 
                      cat_hex, 
                      beer["beer_name"],
@@ -103,5 +103,34 @@ with open("data/mybeer-f68c5-default-rtdb-export.json", "r") as f:
         beer_dict[cat_hex] = beer_list
 
 f.close()
+
 write_data_file(beer_dict)
+
+def get_beer_hex_codes(beer_list: list):
+    separator = "|"
+    hex_codes = '"'
+    i = 0
+    for beer in beer_list:
+        i+=1
+        if i != len(beer_list):
+            hex_codes += beer.beer_name_hex + separator
+        else:
+            hex_codes += beer.beer_name_hex
+    hex_codes += '"'
+    #print(hex_codes)
+    return hex_codes
+
+
+beer_hex_codes= ""
+with open("data/SQLitedb.sql", "w") as f:
+    for cat in beer_dict.keys():
+        beer_hex_codes = get_beer_hex_codes(beer_dict[cat])
+        insert_query = 'values = ContentValues().apply{'\
+        + f'\n\tput("id", "{cat}")'\
+        + f'\n\tput("beer_style", "{beer_dict[cat].pop().beer_style}")'\
+        + f'\n\tput("beer_hex_codes", {beer_hex_codes})'\
+        + '}\ndb.insert("beer_categories", null, values)\n'
+        f.write(insert_query)
+    f.close()
+
 print("done")
